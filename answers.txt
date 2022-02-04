@@ -2,7 +2,7 @@ Exercise 1. The char array named value, which is allocated in http_request_heade
 
 Notice that value is 512 bytes long, and sp (which contains a value in the HTTP header) is decoded and copied into value in url_decode(). This means that if sp (and the corresponding HTTP header value) is too long, value will overflow.
 
-The address of value is 0x7fffffffda60. Inside http_request_headers(), the return address is saved at 0x7fffffffdc98. The difference is 0x238 = 568, so if sp is more than 568 bytes long, then the return address will be overwritten. 
+The address of value is 0x7fffffffda50. Inside http_request_headers(), the return address is saved at 0x7fffffffdc88. The difference is 0x238 = 568, so if sp is more than 568 bytes long, then the return address will be overwritten. 
 
 Thus, a request like:
 
