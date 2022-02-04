@@ -1,1 +1,16 @@
-## Place your answers here.
+Exercise 1. The char array named value, which is allocated in http_request_headers(), can overflow. Since value is not marked as static, it is allocated on the stack. 
+
+Notice that value is 512 bytes long, and sp (which contains a value in the HTTP header) is decoded and copied into value in url_decode(). This means that if sp (and the corresponding HTTP header value) is too long, value will overflow.
+
+The address of value is 0x7fffffffda60. Inside http_request_headers(), the return address is saved at 0x7fffffffdc98. The difference is 0x238 = 568, so if sp is more than 568 bytes long, then the return address will be overwritten. 
+
+Thus, a request like:
+
+b"GET / HTTP/1.0\r\n" + 
+b"A" * 568 + struct.pack("<Q", 0xFFFFFFFFFFFF) + b"\r\n" + 
+b"\r\n"
+
+should work. Here, the b"A" bytes pad the value in the HTTP request up to the return address location and 0xFFFFFFFFFFFF overwrites the original return address.
+
+The call stack is as follows. From process_client(), http_request_headers() is called and its frame is pushed onto the stack. Inside http_request_headers(), the value char array is allocated on the stack and url_decode() is called, so url_decode()'s frame is pushed onto the stack. sp and value are passed into url_decode(), and if sp is sufficiently long (as detailed above), the decoded HTTP request value will be copied beyond the 512 bytes allocated on the stack for value and overwrite the return address of http_request_headers(). When url_decode() returns, it pops off the stack, and when http_request_headers() returns, it returns to a new location because of the overwritten return address.
+    
