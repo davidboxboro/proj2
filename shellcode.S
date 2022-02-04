@@ -9,8 +9,7 @@
 	jmp	calladdr
 
  popladdr:
-	popq	%rcx                   /* addr of first char of STRING */
-					/* syscall arg1: string pathname */
+	popq	%rcx                    /* addr of first char of STRING */
 	xorq	%rax,%rax		/* get a 64-bit zero value */
 	movb	$SYS_unlink,%al		/* set up the syscall number */
 	movq	%rcx,%rdi		/* syscall arg 1: string pathname */
