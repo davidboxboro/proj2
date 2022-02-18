@@ -117,7 +117,7 @@ const char *http_request_headers(int fd)
 {
     static char buf[8192];      /* static variables are not on the stack */
     int i;
-    char value[512];
+    char value[8192];
     char envvar[512];
 
     /* For lab 2: don't remove this line. */
