@@ -5,15 +5,19 @@ import os
 from debug import *
 
 PersonBase = declarative_base()
+BankBase = declarative_base()
 TransferBase = declarative_base()
+CredBase = declarative_base()
 
 class Person(PersonBase):
     __tablename__ = "person"
     username = Column(String(128), primary_key=True)
-    password = Column(String(128))
-    token = Column(String(128))
-    zoobars = Column(Integer, nullable=False, default=10)
     profile = Column(String(5000), nullable=False, default="")
+
+class Bank(BankBase):
+    __tablename__ = "bank"
+    username = Column(String(128), primary_key=True)
+    zoobars = Column(Integer, nullable=False, default=10)
 
 class Transfer(TransferBase):
     __tablename__ = "transfer"
@@ -22,6 +26,13 @@ class Transfer(TransferBase):
     recipient = Column(String(128))
     amount = Column(Integer)
     time = Column(String)
+
+class Cred(CredBase):
+    __tablename__ = "cred"
+    username = Column(String(128), primary_key=True)
+    password = Column(String(128))
+    token = Column(String(128))
+    salt = Column(String(128))
 
 def dbsetup(name, base):
     thisdir = os.path.dirname(os.path.abspath(__file__))
@@ -39,8 +50,14 @@ def dbsetup(name, base):
 def person_setup():
     return dbsetup("person", PersonBase)
 
+def bank_setup():
+    return dbsetup("bank", BankBase)
+
 def transfer_setup():
     return dbsetup("transfer", TransferBase)
+
+def cred_setup():
+    return dbsetup("cred", CredBase)
 
 import sys
 if __name__ == "__main__":

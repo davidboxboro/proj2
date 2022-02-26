@@ -15,7 +15,7 @@ def run_profile(user):
         host = readconf.read_conf().lookup_host('profile')
         with rpclib.client_connect(host) as c:
             return c.call('run', pcode=pcode,
-                                 user= user.username,
+                                 user=user.username,
                                  visitor=g.user.person.username)
     except Exception as e:
         traceback.print_exc()

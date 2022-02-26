@@ -3,41 +3,59 @@ from debug import *
 
 import hashlib
 import random
+import pbkdf2
+import os
 
-def newtoken(db, person):
-    hashinput = "%s%.10f" % (person.password, random.random())
-    person.token = hashlib.md5(hashinput.encode('utf-8')).hexdigest()
+import bank_client
+
+def newtoken(db, cred):
+    hashinput = "%s%.10f" % (cred.password, random.random())
+    cred.token = hashlib.md5(hashinput.encode('utf-8')).hexdigest()
     db.commit()
-    return person.token
+    return cred.token
+
+def newsalt():
+    return "%s" % os.urandom(64)
+
+def slowhash(password, salt):
+    return pbkdf2.PBKDF2(password, salt).hexread(32)
 
 def login(username, password):
-    db = person_setup()
-    person = db.query(Person).get(username)
-    if not person:
+    db = cred_setup()
+    cred = db.query(Cred).get(username)
+    if not cred:
         return None
-    if person.password == password:
-        return newtoken(db, person)
+    salt = cred.salt
+    if cred.password == slowhash(password, salt):
+        return newtoken(db, cred)
     else:
         return None
 
 def register(username, password):
-    db = person_setup()
-    person = db.query(Person).get(username)
-    if person:
+    db = cred_setup()
+    cred = db.query(Cred).get(username)
+    if cred:
         return None
-    newperson = Person()
-    newperson.username = username
-    newperson.password = password
-    db.add(newperson)
+    newcred = Cred()
+    newcred.username = username
+    newcred.salt = newsalt()
+    newcred.password = slowhash(password, newcred.salt)
+    db.add(newcred)
     db.commit()
-    return newtoken(db, newperson)
+    # initialize bank account with balance of 10
+    bank_client.register(username)
+    return newtoken(db, newcred)
 
 def check_token(username, token):
-    db = person_setup()
-    person = db.query(Person).get(username)
-    if person and person.token == token:
+    db = cred_setup()
+    cred = db.query(Cred).get(username)
+    if cred and cred.token == token:
         return True
     else:
         return False
 
-    
+def set_token(username, token):
+    db = cred_setup()
+    cred = db.query(Cred).get(username)
+    cred.token = token
+

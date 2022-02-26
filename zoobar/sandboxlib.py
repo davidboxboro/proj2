@@ -48,7 +48,7 @@ class Sandbox(object):
     def child(self, func):
         ## Prevent child process from communicating over the network.
         libc.unshare(CLONE_NEWNET)
-
+        
         os.chroot(self.dir)
         os.chdir('/')
         resource.setrlimit(resource.RLIMIT_NPROC, (0, 0))

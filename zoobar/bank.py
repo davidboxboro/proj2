@@ -2,21 +2,28 @@ from zoodb import *
 from debug import *
 
 import time
+import auth_client
 
-def transfer(sender, recipient, zoobars):
-    persondb = person_setup()
-    senderp = persondb.query(Person).get(sender)
-    recipientp = persondb.query(Person).get(recipient)
+def transfer(sender, recipient, zoobars, token, caller):
+    # check that token is valid
+    # or calling service is profile 
+    valid_token = auth_client.check_token(sender, token)
+    if not valid_token and caller != "profile":
+        return False
 
-    sender_balance = senderp.zoobars - zoobars
-    recipient_balance = recipientp.zoobars + zoobars
+    bankdb = bank_setup()
+    senderb = bankdb.query(Bank).get(sender)
+    recipientb = bankdb.query(Bank).get(recipient)
+
+    sender_balance = senderb.zoobars - zoobars
+    recipient_balance = recipientb.zoobars + zoobars
 
     if sender_balance < 0 or recipient_balance < 0:
-        raise ValueError()
+        return False
 
-    senderp.zoobars = sender_balance
-    recipientp.zoobars = recipient_balance
-    persondb.commit()
+    senderb.zoobars = sender_balance
+    recipientb.zoobars = recipient_balance
+    bankdb.commit()
 
     transfer = Transfer()
     transfer.sender = sender
@@ -27,11 +34,12 @@ def transfer(sender, recipient, zoobars):
     transferdb = transfer_setup()
     transferdb.add(transfer)
     transferdb.commit()
+    return True
 
 def balance(username):
-    db = person_setup()
-    person = db.query(Person).get(username)
-    return person.zoobars
+    db = bank_setup()
+    bank = db.query(Bank).get(username)
+    return bank.zoobars
 
 def get_log(username):
     db = transfer_setup()
@@ -45,4 +53,10 @@ def get_log(username):
                  'amount': t.amount })
     return r 
 
-
+def register(username):
+    db = bank_setup()
+    newbank = Bank()
+    newbank.username = username
+    # note: newbank.balance = 10 by default
+    db.add(newbank)
+    db.commit()
