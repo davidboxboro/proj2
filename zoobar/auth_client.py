@@ -5,6 +5,8 @@ import rpclib
 sys.path.append(os.getcwd())
 import readconf
 
+import profilemod_client
+
 def login(username, password):
     host = readconf.read_conf().lookup_host('auth')
     with rpclib.client_connect(host) as c:
@@ -22,6 +24,8 @@ def register(username, password):
             newperson.username = username
             db.add(newperson)
             db.commit()
+            # also make empty Profile entry via RPC call
+            profilemod_client.create_empty(username)
         return ret 
 
 def check_token(username, token):

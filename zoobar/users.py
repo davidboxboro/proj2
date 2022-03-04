@@ -5,6 +5,7 @@ from zoodb import *
 from debug import *
 from profile import *
 import bank_client
+import profilemod_client
 
 @catch_err
 @requirelogin
@@ -15,7 +16,7 @@ def users():
         persondb = person_setup()
         user = persondb.query(Person).get(request.values['user'])
         if user: 
-            p = user.profile
+            p = profilemod_client.read(user.username)
             if p.startswith("#!python"):
                 p = run_profile(user)
 

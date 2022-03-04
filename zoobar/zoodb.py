@@ -5,12 +5,17 @@ import os
 from debug import *
 
 PersonBase = declarative_base()
+ProfileBase = declarative_base()
 BankBase = declarative_base()
 TransferBase = declarative_base()
 CredBase = declarative_base()
 
 class Person(PersonBase):
     __tablename__ = "person"
+    username = Column(String(128), primary_key=True)
+
+class Profile(ProfileBase):
+    __tablename__ = "profile"
     username = Column(String(128), primary_key=True)
     profile = Column(String(5000), nullable=False, default="")
 
@@ -49,6 +54,9 @@ def dbsetup(name, base):
 
 def person_setup():
     return dbsetup("person", PersonBase)
+
+def profile_setup():
+    return dbsetup("profile", ProfileBase)
 
 def bank_setup():
     return dbsetup("bank", BankBase)

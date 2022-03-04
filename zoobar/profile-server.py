@@ -8,6 +8,7 @@ import sandboxlib
 import hashlib
 import socket
 import bank_client
+import profilemod_client
 import zoodb
 import stat
 
@@ -51,7 +52,7 @@ def run_profile(pcode, profile_api_client):
     exec(pcode, globals)
 
 class ProfileServer(rpclib.RpcServer):
-    def rpc_run(self, pcode, user, visitor):
+    def rpc_run(self, user, visitor):
         # unique userdir
         uid = 6858
         userdir = '/tmp/%s' % user
@@ -61,6 +62,10 @@ class ProfileServer(rpclib.RpcServer):
         # change owner and perms
         os.chown(userdir, uid, -1)
         os.chmod(userdir, stat.S_IRWXU)
+
+		# get profile code from profilemod service via RPC 
+        pcode = profilemod_client.read(user)
+        pcode = pcode.replace('\r\n', '\n')
 
         (sa, sb) = socket.socketpair(socket.AF_UNIX, socket.SOCK_STREAM, 0)
         pid = os.fork()
