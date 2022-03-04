@@ -52,7 +52,7 @@ def run_profile(pcode, profile_api_client):
 
 class ProfileServer(rpclib.RpcServer):
     def rpc_run(self, pcode, user, visitor):
-        # unique uid and userdir
+        # unique userdir
         uid = 6858
         userdir = '/tmp/%s' % user
         if not os.path.exists(userdir):

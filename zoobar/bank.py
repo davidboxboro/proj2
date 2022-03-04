@@ -6,7 +6,7 @@ import auth_client
 
 def transfer(sender, recipient, zoobars, token, caller):
     # check that token is valid
-    # or calling service is profile 
+    # or calling service is profile
     valid_token = auth_client.check_token(sender, token)
     if not valid_token and caller != "profile":
         return False
