@@ -9,7 +9,6 @@ import inspect
 import builtins
 import functools
 from dataclasses import dataclass, field
-from copy import deepcopy
 
 ## Our AST structure
 
@@ -968,7 +967,7 @@ def concolic_force_branch(b, branch_conds, branch_callers, verbose = 1):
   ## arguments, use the '*' operator documented at
   ## https://docs.python.org/3/tutorial/controlflow.html#unpacking-argument-lists
   
-  new_branch_conds = deepcopy(branch_conds[:b+1])
+  new_branch_conds = branch_conds[:b+1]
   new_branch_conds[b] = sym_not(new_branch_conds[b])
   constraint = sym_and(*new_branch_conds)
 
