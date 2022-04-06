@@ -13,6 +13,12 @@ def newget(query, primary_key):
   ##
   ## Hint: given a SQLalchemy row object r, you can find the name of
   ## its primary key using r.__table__.primary_key.columns.keys()[0]
-  return None
+  res = None
+  for row in query:
+    key_name = row.__table__.primary_key.columns.keys()[0]
+    row_key = row.__dict__[key_name]
+    if row_key == primary_key:
+      res = row
+  return res
 
 sqlalchemy.orm.query.Query.get = newget

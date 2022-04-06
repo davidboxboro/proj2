@@ -9,6 +9,7 @@ import inspect
 import builtins
 import functools
 from dataclasses import dataclass, field
+from copy import deepcopy
 
 ## Our AST structure
 
@@ -185,6 +186,13 @@ class sym_minus(sym_binop):
 
 ## Exercise 2: your code here.
 ## Implement AST nodes for division and multiplication.
+class sym_times(sym_binop):
+  def _z3expr(self):
+    return z3expr(self.a) * z3expr(self.b)
+
+class sym_divide(sym_binop):
+  def _z3expr(self):
+    return z3expr(self.a) / z3expr(self.b)
 
 ## String operations
 
@@ -496,6 +504,27 @@ class concolic_int(int):
 
   ## Exercise 2: your code here.
   ## Implement symbolic division and multiplication.
+  def __mul__(self, o):
+    if isinstance(o, concolic_int):
+      res = self.__v * o.__v
+    else:
+      res = self.__v * o
+    return concolic_int(sym_times(ast(self), ast(o)), res)
+
+  def __rmul__(self, o):
+    res = o * self.__v
+    return concolic_int(sym_times(ast(o), ast(self)), res)
+
+  def __floordiv__(self, o):
+    if isinstance(o, concolic_int):
+      res = self.__v // o.__v
+    else:
+      res = self.__v // o
+    return concolic_int(sym_divide(ast(self), ast(o)), res)
+
+  def __rfloordiv__(self, o):
+    res = o // self.__v
+    return concolic_int(sym_divide(ast(o), ast(self)), res)
 
   def _sym_ast(self):
     return self.__sym
@@ -542,6 +571,15 @@ class concolic_str(str):
   ## Exercise 7: your code here.
   ## Implement symbolic versions of string length (override __len__)
   ## and contains (override __contains__).
+  def __len__(self):
+    return concolic_int(sym_length(ast(self)), len(self.__v)) 
+
+  def __contains__(self, o):
+    if isinstance(o, concolic_str):
+      res = o.__v in self.__v
+    else:
+      res = o in self.__v
+    return concolic_bool(sym_contains(ast(self), ast(o)), res)
 
   def startswith(self, o):
     res = self.__v.startswith(o)
@@ -678,6 +716,15 @@ class concolic_bytes(bytes):
   ## Exercise 7: your code here.
   ## Implement symbolic versions of bytes length (override __len__)
   ## and contains (override __contains__).
+  def __len__(self):
+    return concolic_int(sym_length(ast(self)), len(self.__v)) 
+
+  def __contains__(self, o):
+    if isinstance(o, concolic_str):
+      res = o.__v in self.__v
+    else:
+      res = o in self.__v
+    return concolic_bool(sym_contains(ast(self), ast(o)), res)
 
   def startswith(self, o):
     res = self.__v.startswith(o)
@@ -920,8 +967,10 @@ def concolic_force_branch(b, branch_conds, branch_callers, verbose = 1):
   ## arguments. In Python, to unpack a list into separate positional
   ## arguments, use the '*' operator documented at
   ## https://docs.python.org/3/tutorial/controlflow.html#unpacking-argument-lists
-
-  constraint = None
+  
+  new_branch_conds = deepcopy(branch_conds[:b+1])
+  new_branch_conds[b] = sym_not(new_branch_conds[b])
+  constraint = sym_and(*new_branch_conds)
 
   if verbose > 2:
     callers = branch_callers[b]
@@ -929,10 +978,7 @@ def concolic_force_branch(b, branch_conds, branch_callers, verbose = 1):
     if constraint is not None:
       print(indent(z3expr(constraint).sexpr()))
 
-  if constraint is None:
-    return const_bool(True)
-  else:
-    return constraint
+  return constraint
 
 # Given a constraint, ask Z3 to compute concrete values that make that
 # constraint true. It returns a new ConcreteValues instance with those
@@ -947,7 +993,15 @@ def concolic_find_input(constraint, ok_names, verbose=0):
   ## If Z3 was able to find example inputs that solve this
   ## constraint (i.e., ok == z3.sat), make a new input set
   ## containing the values from Z3's model, and return it.
-  return False, ConcreteValues()
+  ok, model = fork_and_check(constraint)
+  if ok == z3.sat:
+    cv = ConcreteValues()
+    for name in ok_names:
+      if name in model:
+        cv.add(name, model[name])
+    return True, cv
+  else:
+    return False, ConcreteValues()
 
 # Concolic execute func for many different paths and return all
 # computed results for those different paths.
@@ -969,7 +1023,7 @@ def concolic_execs(func, maxiter = 100, verbose = 0):
     (r, branch_conds, branch_callers) = concolic_exec_input(func, concrete_values, verbose)
     if r not in outs:
       outs.append(r)
-
+    
     ## Exercise 6: your code here.
     ##
     ## Here's a possible plan of attack:
@@ -997,6 +1051,17 @@ def concolic_execs(func, maxiter = 100, verbose = 0):
     ##
     ##   where caller is the corresponding value from the list of call
     ##   sites returned by concolic_find_input (i.e., branch_callers).
+    for b, caller in enumerate(branch_callers):
+      constraint = concolic_force_branch(
+            b, branch_conds, branch_callers, verbose)
+      if constraint not in checked:
+        checked.add(constraint)
+        ok, new_concrete_values = concolic_find_input(
+                constraint, concrete_values.var_names())
+        if ok:
+          new_concrete_values.inherit(concrete_values)
+          inputs.add(new_concrete_values, caller)
+
 
   if verbose > 0:
     print('Stopping after', iter, 'iterations')
